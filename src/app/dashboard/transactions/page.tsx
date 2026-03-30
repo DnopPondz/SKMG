@@ -1,47 +1,54 @@
 import { connectDB } from "@/lib/mongodb";
 import Transaction from "@/models/Transaction";
+import { auth } from "@/lib/auth";
 
 export default async function TransactionsPage() {
   await connectDB();
-  const logs = await Transaction.find({}).sort({ createdAt: -1 });
+  // ดึงข้อมูลประวัติย้อนหลัง เรียงจากใหม่ไปเก่า
+  const transactions = await Transaction.find().sort({ createdAt: -1 }).limit(50);
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">📜 ประวัติการทำรายการ (Audit Log)</h1>
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <h1 className="text-2xl font-bold mb-6">📜 ประวัติการทำรายการสต็อก</h1>
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 border-b text-gray-600 text-sm">
+          <thead className="bg-gray-100 border-b">
             <tr>
-              <th className="p-4">วันที่ / เวลา</th>
-              <th className="p-4">ประเภท</th>
-              <th className="p-4">สินค้า</th>
-              <th className="p-4 text-right">จำนวน</th>
-              <th className="p-4">ผู้ทำรายการ</th>
+              <th className="p-4 font-semibold">วันที่/เวลา</th>
+              <th className="p-4 font-semibold">สินค้า</th>
+              <th className="p-4 font-semibold">ประเภท</th>
+              <th className="p-4 font-semibold">จำนวน</th>
+              <th className="p-4 font-semibold">ผู้ทำรายการ</th>
+              <th className="p-4 font-semibold">หมายเหตุ</th>
             </tr>
           </thead>
-          <tbody className="divide-y text-sm">
-            {logs.map((log: any) => (
-              <tr key={log._id.toString()} className="hover:bg-gray-50">
-                <td className="p-4 text-gray-500">
-                  {new Date(log.createdAt).toLocaleString("th-TH")}
+          <tbody>
+            {transactions.map((t: any) => (
+              <tr key={t._id} className="border-b hover:bg-gray-50">
+                <td className="p-4 text-sm">
+                  {new Date(t.createdAt).toLocaleString("th-TH")}
+                </td>
+                <td className="p-4">
+                  <span className="font-medium">{t.productName}</span>
+                  <p className="text-xs text-gray-500">{t.productSku}</p>
                 </td>
                 <td className="p-4">
                   <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                    log.type === "IN" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                    t.type === "IN" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                   }`}>
-                    {log.type === "IN" ? "รับเข้า" : "เบิกจ่าย"}
+                    {t.type === "IN" ? "รับเข้า" : "จ่ายออก"}
                   </span>
                 </td>
-                <td className="p-4">
-                  <div className="font-medium text-gray-800">{log.productName}</div>
-                  <div className="text-xs text-gray-400">SKU: {log.productSku}</div>
-                </td>
-                <td className={`p-4 text-right font-bold ${log.type === "IN" ? "text-green-600" : "text-red-600"}`}>
-                  {log.type === "IN" ? "+" : "-"}{log.amount}
-                </td>
-                <td className="p-4 text-gray-600">{log.userName}</td>
+                <td className="p-4 font-bold">{t.amount}</td>
+                <td className="p-4 text-sm text-gray-600">{t.userName}</td>
+                <td className="p-4 text-sm text-gray-500">{t.note}</td>
               </tr>
             ))}
+            {transactions.length === 0 && (
+              <tr>
+                <td colSpan={6} className="p-10 text-center text-gray-500">ยังไม่มีประวัติรายการ</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

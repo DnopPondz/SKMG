@@ -1,48 +1,67 @@
-import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
+import Transaction from "@/models/Transaction";
+import { AlertTriangle, Package, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 export default async function DashboardPage() {
-  const session = await auth();
   await connectDB();
 
-  // ดึงข้อมูลสรุป
+  // 1. ดึงข้อมูลสรุป
   const totalProducts = await Product.countDocuments();
-  const lowStockItems = await Product.find({ $expr: { $lte: ["$quantity", "$minStock"] } });
+  const lowStockProducts = await Product.find({
+    $expr: { $lte: ["$quantity", "$minStock"] }
+  });
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">ยินดีต้อนรับ, {session?.user?.name} ({session?.user?.role})</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-100 p-6 rounded-lg shadow">
-          <h2 className="text-blue-800 font-semibold">สินค้าทั้งหมด</h2>
-          <p className="text-3xl font-bold">{totalProducts} รายการ</p>
+    <div className="p-8 space-y-8">
+      <h1 className="text-2xl font-bold">📊 ภาพรวมคลังสินค้า</h1>
+
+      {/* สรุปตัวเลขสำคัญ */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+          <div className="flex items-center gap-4">
+            <Package className="text-blue-500" size={32} />
+            <div>
+              <p className="text-gray-500 text-sm">สินค้าทั้งหมด</p>
+              <p className="text-2xl font-bold">{totalProducts} รายการ</p>
+            </div>
+          </div>
         </div>
-        
-        <div className="bg-red-100 p-6 rounded-lg shadow">
-          <h2 className="text-red-800 font-semibold">สินค้าใกล้หมด</h2>
-          <p className="text-3xl font-bold">{lowStockItems.length} รายการ</p>
-        </div>
-        
-        <div className="bg-green-100 p-6 rounded-lg shadow">
-          <h2 className="text-green-800 font-semibold">สิทธิ์การใช้งาน</h2>
-          <p className="text-xl">{session?.user?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'พนักงาน'}</p>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500">
+          <div className="flex items-center gap-4">
+            <AlertTriangle className="text-orange-500" size={32} />
+            <div>
+              <p className="text-gray-500 text-sm">สินค้าสต็อกต่ำ</p>
+              <p className="text-2xl font-bold text-orange-600">{lowStockProducts.length} รายการ</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* รายการสินค้าใกล้หมด */}
-      {lowStockItems.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-xl font-bold mb-4 text-red-600">⚠️ แจ้งเตือนสินค้าใกล้หมด</h3>
-          <ul className="bg-white border rounded shadow divide-y">
-            {lowStockItems.map(item => (
-              <li key={item.sku} className="p-4 flex justify-between">
-                <span>{item.name} (SKU: {item.sku})</span>
-                <span className="font-bold text-red-500">คงเหลือ: {item.quantity} {item.unit}</span>
-              </li>
+      {/* รายการสินค้าที่ต้องสั่งเพิ่ม (Low Stock Alert) */}
+      {lowStockProducts.length > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+          <h2 className="text-orange-800 font-bold mb-4 flex items-center gap-2">
+            <AlertTriangle size={20} /> สินค้าที่ต้องสั่งเพิ่มด่วน!
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {lowStockProducts.map((p: any) => (
+              <div key={p._id} className="bg-white p-4 rounded-lg shadow-sm border border-orange-100">
+                <p className="font-bold text-gray-800">{p.name}</p>
+                <div className="flex justify-between mt-2 text-sm">
+                  <span className="text-gray-500">คงเหลือ: <b className="text-red-500">{p.quantity}</b></span>
+                  <span className="text-gray-500">จุดแจ้งเตือน: <b>{p.minStock}</b></span>
+                </div>
+                <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    className="bg-red-500 h-1.5 rounded-full" 
+                    style={{ width: `${(p.quantity / p.minStock) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>
