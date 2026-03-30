@@ -1,12 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/login",
-  },
+  session: { strategy: "jwt" },
+  pages: { signIn: "/login" },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -23,5 +19,5 @@ export const authConfig = {
       return session;
     },
   },
-  providers: [], // ปล่อยว่างไว้ที่นี่
+  providers: [], 
 } satisfies NextAuthConfig;
