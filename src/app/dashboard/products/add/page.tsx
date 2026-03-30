@@ -6,10 +6,13 @@ export default function AddProductPage() {
   const [form, setForm] = useState({
     sku: "", name: "", category: "", price: 0, minStock: 5, unit: "ชิ้น"
   });
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    
     const res = await fetch("/api/products/add", {
       method: "POST",
       body: JSON.stringify(form),
@@ -19,9 +22,12 @@ export default function AddProductPage() {
     if (res.ok) {
       alert("เพิ่มสินค้าสำเร็จ");
       router.push("/dashboard/products");
+      router.refresh();
     } else {
-      alert("เกิดข้อผิดพลาด: SKU นี้อาจมีอยู่แล้ว");
+      const errorData = await res.json();
+      alert(`เกิดข้อผิดพลาด: ${errorData.message || "SKU นี้อาจมีอยู่แล้ว"}`);
     }
+    setLoading(false);
   };
 
   return (
@@ -60,12 +66,16 @@ export default function AddProductPage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">จุดแจ้งเตือนสินค้าต่ำ (Min Stock)</label>
-            <input type="number" className="w-full p-2 border rounded" 
+            <input type="number" className="w-full p-2 border rounded" defaultValue={5}
               onChange={e => setForm({...form, minStock: Number(e.target.value)})} />
           </div>
         </div>
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">
-          บันทึกข้อมูลสินค้า
+        <button 
+          type="submit" 
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 disabled:bg-gray-400"
+        >
+          {loading ? "กำลังบันทึก..." : "บันทึกข้อมูลสินค้า"}
         </button>
       </form>
     </div>

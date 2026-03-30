@@ -4,6 +4,6 @@ import { authConfig } from "@/lib/auth.config";
 export default NextAuth(authConfig).auth;
 
 export const config = {
-  // ป้องกันทุกหน้าภายใต้ /dashboard
+  // ตรวจสอบสิทธิ์ทุกหน้าที่ขึ้นต้นด้วย /dashboard
   matcher: ["/dashboard/:path*"],
 };

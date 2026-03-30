@@ -4,22 +4,32 @@ import { useState, useEffect } from "react";
 export default function CategoryPage() {
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const fetchCategories = () => {
-    fetch("/api/categories").then(res => res.json()).then(data => setCategories(data));
+  const fetchCategories = async () => {
+    const res = await fetch("/api/categories");
+    const data = await res.json();
+    setCategories(data);
   };
 
   useEffect(() => { fetchCategories(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/categories", {
+    setLoading(true);
+    const res = await fetch("/api/categories", {
       method: "POST",
       body: JSON.stringify({ name }),
       headers: { "Content-Type": "application/json" }
     });
-    setName("");
-    fetchCategories();
+    
+    if (res.ok) {
+      setName("");
+      fetchCategories();
+    } else {
+      alert("ไม่สามารถเพิ่มหมวดหมู่ได้");
+    }
+    setLoading(false);
   };
 
   return (
@@ -34,13 +44,21 @@ export default function CategoryPage() {
           className="p-2 border rounded w-64" 
           required 
         />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded">เพิ่ม</button>
+        <button 
+          disabled={loading}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          {loading ? "กำลังเพิ่ม..." : "เพิ่มหมวดหมู่"}
+        </button>
       </form>
-      <div className="bg-white shadow rounded-lg p-4">
+      <div className="bg-white shadow rounded-lg p-4 max-w-md">
+        <h2 className="font-semibold mb-3 border-b pb-2">รายการหมวดหมู่ทั้งหมด</h2>
         <ul className="divide-y">
-          {categories.map((cat: any) => (
-            <li key={cat._id} className="py-2">{cat.name}</li>
-          ))}
+          {categories.length > 0 ? categories.map((cat: any) => (
+            <li key={cat._id} className="py-2 flex justify-between items-center">
+              <span>{cat.name}</span>
+            </li>
+          )) : <p className="text-gray-500 py-2">ยังไม่มีหมวดหมู่</p>}
         </ul>
       </div>
     </div>
