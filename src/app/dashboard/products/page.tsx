@@ -1,49 +1,65 @@
+import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
-import { auth } from "@/lib/auth";
 
-export default async function ProductsPage() {
+export default async function DashboardPage() {
   const session = await auth();
   await connectDB();
-  const products = await Product.find({}).sort({ createdAt: -1 });
+
+  // ดึงข้อมูลวิเคราะห์สต็อก
+  const products = await Product.find({});
+  const totalProducts = products.length;
+  const totalValue = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+  const lowStockItems = products.filter(p => p.quantity <= p.minStock);
 
   return (
     <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">จัดการสินค้า</h1>
-        {session?.user?.role === "admin" && (
-          <button className="bg-blue-600 text-white px-4 py-2 rounded">+ เพิ่มสินค้า</button>
-        )}
+      <h1 className="text-2xl font-bold mb-6">
+        แผงควบคุม (Dashboard) - สวัสดี {session?.user?.name}
+      </h1>
+      
+      {/* ส่วนสรุปตัวเลข (Statistics) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+          <h2 className="text-gray-500 text-sm font-medium">สินค้าทั้งหมด</h2>
+          <p className="text-3xl font-bold text-gray-800">{totalProducts} รายการ</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+          <h2 className="text-gray-500 text-sm font-medium">มูลค่าคลังสินค้า</h2>
+          <p className="text-3xl font-bold text-gray-800">฿{totalValue.toLocaleString()}</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
+          <h2 className="text-gray-500 text-sm font-medium">สินค้าใกล้หมด</h2>
+          <p className="text-3xl font-bold text-red-600">{lowStockItems.length} รายการ</p>
+        </div>
       </div>
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="p-4">SKU</th>
-              <th className="p-4">ชื่อสินค้า</th>
-              <th className="p-4">หมวดหมู่</th>
-              <th className="p-4 text-right">ราคา</th>
-              <th className="p-4 text-right">คงเหลือ</th>
-              <th className="p-4">หน่วย</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {products.map((item) => (
-              <tr key={item._id.toString()} className="hover:bg-gray-50">
-                <td className="p-4 font-mono text-sm">{item.sku}</td>
-                <td className="p-4">{item.name}</td>
-                <td className="p-4">{item.category}</td>
-                <td className="p-4 text-right">{item.price.toLocaleString()}</td>
-                <td className={`p-4 text-right font-bold ${item.quantity <= item.minStock ? 'text-red-500' : ''}`}>
-                  {item.quantity}
-                </td>
-                <td className="p-4 text-gray-500">{item.unit}</td>
-              </tr>
+      {/* รายการแจ้งเตือนสินค้าสต็อกต่ำ (Notifications) */}
+      {lowStockItems.length > 0 && (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-red-50 px-6 py-4 border-b border-red-100">
+            <h3 className="text-red-700 font-bold flex items-center">
+              ⚠️ รายการสินค้าที่ต้องสั่งซื้อเพิ่ม
+            </h3>
+          </div>
+          <ul className="divide-y divide-gray-100">
+            {lowStockItems.map(item => (
+              <li key={item.sku} className="px-6 py-4 flex justify-between items-center hover:bg-gray-50">
+                <div>
+                  <p className="font-medium text-gray-800">{item.name}</p>
+                  <p className="text-xs text-gray-400">SKU: {item.sku}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-red-600 font-bold">{item.quantity} {item.unit}</p>
+                  <p className="text-xs text-gray-400">จุดสั่งเพิ่ม: {item.minStock}</p>
+                </div>
+              </li>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

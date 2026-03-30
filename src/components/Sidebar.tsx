@@ -2,15 +2,19 @@ import Link from "next/link";
 
 export default function Sidebar() {
   return (
-    <div className="w-64 bg-gray-900 text-white min-h-screen p-4">
-      <div className="text-xl font-bold mb-8 border-b border-gray-700 pb-4">SKMG Stock</div>
-      <nav className="space-y-2">
-        <Link href="/dashboard" className="block p-3 hover:bg-gray-800 rounded">📊 Dashboard</Link>
-        <Link href="/dashboard/products" className="block p-3 hover:bg-gray-800 rounded">📦 สินค้าคงคลัง</Link>
-        <Link href="/dashboard/stock-in" className="block p-3 hover:bg-gray-800 rounded">📥 รับสินค้าเข้า</Link>
-        <Link href="/dashboard/stock-out" className="block p-3 hover:bg-gray-800 rounded">📤 เบิกสินค้าออก</Link>
-        <Link href="/dashboard/reports" className="block p-3 hover:bg-gray-800 rounded">📑 รายงาน</Link>
+    <aside className="w-64 bg-gray-900 text-white min-h-screen p-4 flex flex-col">
+      <div className="text-2xl font-bold mb-8 px-2 text-blue-400">SKMG Stock</div>
+      <nav className="flex-1 space-y-1">
+        <Link href="/dashboard" className="block p-3 hover:bg-gray-800 rounded transition">📊 แดชบอร์ด</Link>
+        <Link href="/dashboard/products" className="block p-3 hover:bg-gray-800 rounded transition">📦 คลังสินค้า</Link>
+        <Link href="/dashboard/stock-in" className="block p-3 hover:bg-gray-800 rounded transition">📥 รับสินค้าเข้า</Link>
+        <Link href="/dashboard/stock-out" className="block p-3 hover:bg-gray-800 rounded transition">📤 เบิกสินค้าออก</Link>
+        <Link href="/dashboard/transactions" className="block p-3 hover:bg-gray-800 rounded transition">📜 ประวัติธุรกรรม</Link>
+        <Link href="/dashboard/reports" className="block p-3 hover:bg-gray-800 rounded transition">📑 รายงานสรุป</Link>
       </nav>
-    </div>
+      <div className="pt-4 border-t border-gray-800 text-xs text-gray-500 px-2">
+        Logged in as SKU Manager
+      </div>
+    </aside>
   );
 }
