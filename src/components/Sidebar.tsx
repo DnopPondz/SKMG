@@ -12,9 +12,6 @@ export default function Sidebar() {
         <Link href="/dashboard/transactions" className="block p-3 hover:bg-gray-800 rounded transition">📜 ประวัติธุรกรรม</Link>
         <Link href="/dashboard/reports" className="block p-3 hover:bg-gray-800 rounded transition">📑 รายงานสรุป</Link>
       </nav>
-      <div className="pt-4 border-t border-gray-800 text-xs text-gray-500 px-2">
-        Logged in as SKU Manager
-      </div>
     </aside>
   );
 }
