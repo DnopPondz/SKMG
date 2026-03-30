@@ -6,14 +6,12 @@ import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: {
-    strategy: "jwt",
-  },
+  session: { strategy: "jwt" },
   providers: [
     Credentials({
       credentials: {
-        email: {},
-        password: {},
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
         const parsed = z
@@ -26,10 +24,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
 
         const { email, password } = parsed.data;
-
         await connectDB();
+        
         const user = await User.findOne({ email });
-
         if (!user) return null;
 
         const isValid = await bcrypt.compare(password, user.password);
@@ -44,14 +41,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  pages: {
-    signIn: "/login",
-  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as { role?: string }).role || "user";
+        token.role = user.role;
       }
       return token;
     },
@@ -63,4 +57,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+  pages: { signIn: "/login" },
 });

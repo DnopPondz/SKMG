@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const parsed = registerSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json({ message: "Invalid input" }, { status: 400 });
+      return NextResponse.json({ message: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
     }
 
     const { name, email, password } = parsed.data;
@@ -25,10 +25,7 @@ export async function POST(req: Request) {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json(
-        { message: "Email already exists" },
-        { status: 409 }
-      );
+      return NextResponse.json({ message: "อีเมลนี้ถูกใช้งานแล้ว" }, { status: 409 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -40,13 +37,11 @@ export async function POST(req: Request) {
       role: "user",
     });
 
+    return NextResponse.json({ message: "สร้างบัญชีสำเร็จ" }, { status: 201 });
+  } catch (error) {
+    console.error("Registration Error Detail:", error); // ตรวจสอบสาเหตุใน Terminal
     return NextResponse.json(
-      { message: "User created successfully" },
-      { status: 201 }
-    );
-  } catch {
-    return NextResponse.json(
-      { message: "Something went wrong" },
+      { message: "เกิดข้อผิดพลาดภายในระบบ", error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }
