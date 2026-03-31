@@ -1,23 +1,45 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User";
+import bcrypt from "bcryptjs";
 
-export interface IProduct {
-  sku: string;
-  name: string;
-  category: string;
-  quantity: number;
-  minStock: number;
-  price: number;
-  unit: string;
+export async function POST(req: Request) {
+  try {
+    const { name, email, password } = await req.json();
+
+    if (!name || !email || !password) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    await connectDB();
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json(
+        { message: "User already exists" },
+        { status: 400 }
+      );
+    }
+
+    // Hash the password securely
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create the new user
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    return NextResponse.json(
+      { message: "User registered successfully", user: { id: newUser._id, name: newUser.name, email: newUser.email } },
+      { status: 201 }
+    );
+  } catch (error) {
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
 }
-
-const ProductSchema = new Schema<IProduct>({
-  sku: { type: String, required: true, unique: true },
-  name: { type: String, required: true },
-  category: { type: String, required: true },
-  quantity: { type: Number, default: 0 },
-  minStock: { type: Number, default: 5 },
-  price: { type: Number, required: true },
-  unit: { type: String, default: "ชิ้น" },
-}, { timestamps: true });
-
-export default models.Product || model<IProduct>("Product", ProductSchema);
