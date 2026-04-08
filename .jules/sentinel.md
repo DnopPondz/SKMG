@@ -1,0 +1,4 @@
+## 2026-04-08 - Critical Missing Auth Route Handling
+**Vulnerability:** The registration endpoint (`src/app/api/register/route.ts`) was completely missing its request handlers and incorrectly exported a Mongoose schema (`Product`). This effectively blocked any user registration while also creating a completely non-functional security-sensitive endpoint.
+**Learning:** Security features like user registration can be entirely overwritten or misplaced (likely a copy-paste error), leading to a fully broken authentication flow. The absence of a registration handler means no input validation and no secure password hashing for user creation.
+**Prevention:** Ensure integration tests cover full authentication flows (registration -> login -> protected route) to catch completely broken or missing security-critical API endpoints.
