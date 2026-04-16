@@ -3,6 +3,15 @@ import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
 import Transaction from "@/models/Transaction";
 import { auth } from "@/lib/auth";
+import { z } from "zod";
+
+// 🛡️ Sentinel: Validate input to prevent NoSQL injection
+const stockSchema = z.object({
+  sku: z.string().min(1, "SKU is required"),
+  type: z.enum(["IN", "OUT"]),
+  amount: z.number().positive("Amount must be positive"),
+  note: z.string().optional()
+});
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +20,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "กรุณาเข้าสู่ระบบ" }, { status: 401 });
     }
 
-    const { sku, type, amount, note } = await req.json(); 
+    const json = await req.json();
+    const result = stockSchema.safeParse(json);
+
+    if (!result.success) {
+      return NextResponse.json({ message: "ข้อมูลไม่ถูกต้อง", errors: result.error.format() }, { status: 400 });
+    }
+
+    const { sku, type, amount, note } = result.data;
+
     await connectDB();
 
     const product = await Product.findOne({ sku });
