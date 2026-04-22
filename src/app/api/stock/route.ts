@@ -3,6 +3,14 @@ import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
 import Transaction from "@/models/Transaction";
 import { auth } from "@/lib/auth";
+import { z } from "zod";
+
+const stockSchema = z.object({
+  sku: z.string(),
+  type: z.enum(["IN", "OUT", "ADJUST"]),
+  amount: z.coerce.number().positive(),
+  note: z.string().optional()
+});
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +19,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "กรุณาเข้าสู่ระบบ" }, { status: 401 });
     }
 
-    const { sku, type, amount, note } = await req.json(); 
+    const body = await req.json();
+    const result = stockSchema.safeParse(body);
+
+    if (!result.success) {
+      return NextResponse.json({ message: "Invalid input data" }, { status: 400 });
+    }
+
+    const { sku, type, amount, note } = result.data;
     await connectDB();
 
     const product = await Product.findOne({ sku });
