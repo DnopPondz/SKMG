@@ -1,0 +1,4 @@
+## 2024-04-27 - [NoSQL Injection in Next.js App Router via unvalidated req.json()]
+**Vulnerability:** Passing unvalidated `req.json()` payloads directly into Mongoose queries (e.g., `findOne`) in Next.js App Router APIs (`/api/stock`, etc) introduces NoSQL injection risks. Attackers can send query operator objects like `{"$ne": null}`.
+**Learning:** In this project, Next.js App Router combined with Mongoose is susceptible to injection because the raw JSON payload parsed from requests lacks type enforcement. Relying on TS interfaces is insufficient as runtime objects bypass compilation checks.
+**Prevention:** Always enforce string types and validate all API inputs strictly using a runtime validation library like Zod before passing them to Mongoose query methods. Handle Zod validation errors without leaking validation details.
