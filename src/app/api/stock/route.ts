@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
 import Transaction from "@/models/Transaction";
 import { auth } from "@/lib/auth";
+import { z } from "zod";
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +12,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "กรุณาเข้าสู่ระบบ" }, { status: 401 });
     }
 
-    const { sku, type, amount, note } = await req.json(); 
+    const payload = await req.json();
+
+    // Validate and sanitize input to prevent NoSQL Injection
+    const schema = z.object({
+      sku: z.string(),
+      type: z.enum(["IN", "OUT"]),
+      amount: z.union([z.number(), z.string()]).transform(Number),
+      note: z.string().optional()
+    });
+
+    const parsed = schema.safeParse(payload);
+    if (!parsed.success) {
+      return NextResponse.json({ message: "Invalid input data" }, { status: 400 });
+    }
+
+    const { sku, type, amount, note } = parsed.data;
+
     await connectDB();
 
     const product = await Product.findOne({ sku });
@@ -47,7 +64,7 @@ export async function POST(req: Request) {
       currentQuantity: newQuantity 
     });
 
-  } catch (error: any) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  } catch (_error) {
+    return NextResponse.json({ message: "An internal server error occurred" }, { status: 500 });
   }
 }
