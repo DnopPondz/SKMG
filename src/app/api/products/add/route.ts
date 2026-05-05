@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
 import { auth } from "@/lib/auth";
+import { z } from "zod";
+
+const productSchema = z.object({
+  sku: z.string().min(1, "SKU is required"),
+  name: z.string().min(1, "Name is required"),
+  category: z.string().min(1, "Category is required"),
+  minStock: z.number().optional().default(5),
+  price: z.number().min(0, "Price must be non-negative"),
+  unit: z.string().optional().default("ชิ้น"),
+});
 
 export async function POST(req: Request) {
   try {
@@ -12,16 +22,22 @@ export async function POST(req: Request) {
     }
 
     const data = await req.json();
+
+    const result = productSchema.safeParse(data);
+    if (!result.success) {
+      return NextResponse.json({ message: "Invalid input data" }, { status: 400 });
+    }
+
     await connectDB();
 
     // สร้างสินค้าใหม่ในฐานข้อมูล
     const newProduct = await Product.create({
-      ...data,
+      ...result.data,
       quantity: 0, // เริ่มต้นสต็อกที่ 0 เสมอ
     });
     
     return NextResponse.json(newProduct, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  } catch (_error) {
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
