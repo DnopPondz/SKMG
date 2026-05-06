@@ -1,0 +1,4 @@
+## 2024-05-07 - [Mass Assignment Risk in Next.js API Routes]
+**Vulnerability:** Passing unvalidated `req.json()` payloads directly into Mongoose queries (e.g., `Product.create({...data})`) in Next.js App Router API routes allows for mass assignment attacks, enabling arbitrary fields or malicious data insertion.
+**Learning:** The project relies heavily on Next.js API routes handling requests via `req.json()`. Without explicit validation schema mapping, we inject untrusted JSON right into the database model operations, exposing the DB structure directly to clients.
+**Prevention:** Always define strong schemas using a library like `zod` for incoming request body data. Use `schema.safeParse()` and spread the parsed `result.data` when interacting with database drivers or ORMs instead of spreading raw user inputs.
