@@ -1,0 +1,4 @@
+## 2025-02-14 - Mass Assignment & Data Leakage in API Routes
+**Vulnerability:** The `src/app/api/products/add/route.ts` directly passed an unvalidated payload `req.json()` into the `Product.create()` function, causing a mass assignment risk. It also returned raw error messages in catch blocks.
+**Learning:** Next.js App Router API routes must validate incoming request payloads rather than trusting raw JSON. Unvalidated input passed to Mongoose create operations can allow attackers to inject unexpected fields or bypass application logic. Exposing `error.message` on failures leaks internal application state.
+**Prevention:** Always use Zod `safeParse()` for incoming payloads and pass the validated `result.data` to database models. Catch blocks should never return raw error properties; always return generic error messages (e.g., 'Internal server error') to the client and omit the unused `error` variable entirely to prevent TypeScript/ESLint warnings.
