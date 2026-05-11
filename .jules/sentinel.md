@@ -1,0 +1,4 @@
+## 2024-05-11 - Mass Assignment Risk in Next.js App Router API
+**Vulnerability:** API routes (e.g., `src/app/api/products/add/route.ts`) were parsing raw JSON payloads via `req.json()` and directly passing them into Mongoose `Model.create()` operations without validation.
+**Learning:** This widespread pattern in Next.js backend code allows malicious clients to inject unexpected fields (Mass Assignment) or potentially NoSQL payload structures because Mongoose models by default accept fields not explicitly defined in schemas if not strictly configured, or if `req.json()` returns nested objects.
+**Prevention:** Always define a strict `zod` schema for the expected payload and use `z.safeParse()`. Only use the validated `result.data` to construct database queries or create objects, rather than spreading the raw `req.json()` result.
