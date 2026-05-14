@@ -1,0 +1,4 @@
+## 2026-05-14 - Prevent Information Disclosure & Enforce Data Validation
+**Vulnerability:** The API route at `src/app/api/products/add/route.ts` exposed internal stack traces in the 500 error response and blindly trusted incoming JSON payloads, risking mass assignment and data pollution.
+**Learning:** Returning unhandled `error.message` directly from a Next.js App Router catch block leaks internal application context to external actors, which could assist in a targeted attack. Furthermore, passing raw `req.json()` objects straight to Mongoose create/update methods enables potential unauthorized field modifications.
+**Prevention:** Always implement `zod` for request schema validation with `safeParse()` to reject malformed data, and sanitize `catch` blocks to only return generic internal server error strings.
