@@ -1,0 +1,4 @@
+## 2026-03-30 - Mass Assignment and Error Leak in Next.js API Routes
+**Vulnerability:** The `/api/products/add` endpoint directly passed `req.json()` payloads into a Mongoose create query, leading to a mass assignment vulnerability. The error handler was also leaking `error.message` directly to the client.
+**Learning:** Next.js App Router API routes receiving raw JSON without validation allow attackers to inject unexpected fields (like forcing `quantity` or administrative flags). Leaking `error.message` gives attackers knowledge of backend implementation details.
+**Prevention:** Always validate API request bodies using `zod` and `safeParse()`, and pass the explicitly parsed `result.data` to the database instead of the raw payload. Ensure that catch blocks return generic messages (e.g. "Internal server error") rather than throwing internal error details to the client.
