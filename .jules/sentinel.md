@@ -1,0 +1,4 @@
+## 2023-10-27 - [Mass Assignment Risk in Next.js App Router API Routes]
+**Vulnerability:** Found `src/app/api/products/add/route.ts` directly passing unvalidated `req.json()` payloads into `Product.create()`.
+**Learning:** This is a common pattern in the codebase that allows attackers to override restricted fields (e.g., `quantity`, internal IDs, roles) because Mongoose models by default accept any valid schema field during creation unless explicitly omitted or validated. The lack of strict Zod validation at the boundary of Next.js API routes creates widespread mass assignment risks.
+**Prevention:** Always use Zod `safeParse()` to define an explicit schema for the expected request body. Only pass the validated `parsed.data` object to Mongoose database operations to ensure that unexpected or malicious fields are stripped out before execution.
