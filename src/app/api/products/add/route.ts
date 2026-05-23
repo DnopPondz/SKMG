@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
 import { auth } from "@/lib/auth";
+
+const addProductSchema = z.object({
+  sku: z.string().min(1),
+  name: z.string().min(1),
+  category: z.string().min(1),
+  minStock: z.number().min(0).optional(),
+  price: z.number().min(0),
+  unit: z.string().optional(),
+});
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +21,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "สิทธิ์ไม่เพียงพอ เฉพาะ Admin เท่านั้น" }, { status: 403 });
     }
 
-    const data = await req.json();
+    const rawData = await req.json();
+    const parsed = addProductSchema.safeParse(rawData);
+    if (!parsed.success) {
+      return NextResponse.json({ message: "Invalid input data" }, { status: 400 });
+    }
+    const data = parsed.data;
+
     await connectDB();
 
     // สร้างสินค้าใหม่ในฐานข้อมูล
@@ -21,7 +37,7 @@ export async function POST(req: Request) {
     });
     
     return NextResponse.json(newProduct, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
