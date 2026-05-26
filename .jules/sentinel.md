@@ -1,0 +1,4 @@
+## 2024-05-27 - Mass Assignment / NoSQL Injection in Next.js App Router
+**Vulnerability:** Passing unvalidated `req.json()` payloads directly into Mongoose queries (e.g., `findOne`) or create operations (e.g., `Product.create({ ...data })`) introduces mass assignment and NoSQL injection risks.
+**Learning:** This pattern was found in `src/app/api/products/add/route.ts` where user inputs were directly passed into the database layer without proper validation or sanitization, potentially allowing malicious actors to override unexpected fields (like `quantity` if it wasn't explicitly hardcoded) or manipulate queries.
+**Prevention:** Use Zod `safeParse()` to validate and sanitize inputs. Always use the resulting parsed `data` object instead of raw inputs to construct database queries and updates.
